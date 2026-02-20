@@ -9,7 +9,6 @@ body {
     margin: 0;
     background: black;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -17,29 +16,26 @@ body {
 
 .container {
     position: relative;
-    width: 500px;
-    height: 500px;
+    width: 600px;
+    height: 600px;
 }
 
+/* Ferrari image */
 .container img {
     position: absolute;
-    width: 320px;
-    left: 50%;
+    width: 350px;
     top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2;
-    pointer-events: none;
-}
-
-canvas {
-    position: absolute;
-    left: 0;
-    top: 0;
     z-index: 1;
 }
 
-.controls {
-    margin-top: 20px;
+/* Visualizer canvas */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
 }
 </style>
 </head>
@@ -48,31 +44,25 @@ canvas {
 
 <div class="container">
 
-<!-- Embedded Ferrari Image (cannot be blocked) -->
-<img src="data:image/jpeg;base64,
-/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUQEhIVFhUVFRUVFRUVFRUVFRUVFRUWFhUV
-FRUYHSggGBolHRUVITEhJSkrLi4uFx8zODMsNygtLisBCgoKDg0OFxAQFy0dHR0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAOEA4QMBIgACEQED
-EQH/xAAbAAEAAgMBAQAAAAAAAAAAAAAABQYBAwQCB//EAD8QAAIBAwIEAwYEBgMAAAAAAAECAwAE
-RQUSITFBUWEGEyJxgZEUkaGx8BRCwdHhI2KSkvEVFiMzQ1Oi/8QAGQEAAwEBAQAAAAAAAAAAAAAA
-AAECAwQF/8QAJhEAAgICAgICAgMBAAAAAAAAAAECEQMhEjEEE0FRImFxgZGh8P/aAAwDAQACEQMR
-AD8A9lREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERAREQEREBERA
-REQEREBERA//2Q==" 
-alt="Ferrari">
+<!-- IMPORTANT: Replace this with your Ferrari image -->
+<img src="ferrari.png" alt="Ferrari">
 
-<canvas id="canvas" width="500" height="500"></canvas>
+<canvas id="canvas"></canvas>
+
 </div>
 
-<div class="controls">
-    <input type="file" id="audioFile" accept="audio/*">
-    <button id="replayBtn">Replay</button>
-</div>
+<input type="file" id="audioFile" accept="audio/*">
+<button id="replayBtn">Replay</button>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audioInput = document.getElementById("audioFile");
 const replayBtn = document.getElementById("replayBtn");
+
+const size = 600;
+canvas.width = size;
+canvas.height = size;
 
 let audio = new Audio();
 let audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -90,9 +80,7 @@ audioInput.addEventListener("change", function() {
 
     audio.src = URL.createObjectURL(file);
 
-    if (source) {
-        source.disconnect();
-    }
+    if (source) source.disconnect();
 
     source = audioContext.createMediaElementSource(audio);
     source.connect(analyser);
@@ -113,28 +101,27 @@ function animate() {
     requestAnimationFrame(animate);
 
     analyser.getByteFrequencyData(dataArray);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, size, size);
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 170;
+    const center = size / 2;
+    const radius = 200;
 
     for (let i = 0; i < bufferLength; i++) {
         const value = dataArray[i];
         const percent = value / 255;
-        const barHeight = 90 * percent;
+        const barHeight = 100 * percent;
 
         const angle = (i / bufferLength) * Math.PI * 2;
 
-        const x1 = centerX + Math.cos(angle) * radius;
-        const y1 = centerY + Math.sin(angle) * radius;
+        const x1 = center + Math.cos(angle) * radius;
+        const y1 = center + Math.sin(angle) * radius;
 
-        const x2 = centerX + Math.cos(angle) * (radius + barHeight);
-        const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+        const x2 = center + Math.cos(angle) * (radius + barHeight);
+        const y2 = center + Math.sin(angle) * (radius + barHeight);
 
-        const hue = (i * 5 + Date.now() / 10) % 360;
+        const hue = (i * 6 + Date.now() / 15) % 360;
 
-        ctx.strokeStyle = "hsl(" + hue + ", 100%, 50%)";
+        ctx.strokeStyle = "hsl(" + hue + ",100%,50%)";
         ctx.lineWidth = 2;
 
         ctx.beginPath();
