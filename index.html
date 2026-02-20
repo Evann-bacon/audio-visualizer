@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Ferrari Neon Audio Visualizer</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Visualizer</title>
+
 <style>
 body {
     margin: 0;
     background: black;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    overflow: hidden;
 }
 
 canvas {
@@ -19,13 +22,11 @@ canvas {
 
 #album {
     position: absolute;
-    width: 260px;
-    height: 260px;
+    width: 240px;
+    height: 240px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 0 30px #ff0000,
-                0 0 60px #ff0000,
-                0 0 100px #ff0000;
+    box-shadow: 0 0 40px #ff0000;
     animation: spin 10s linear infinite;
 }
 
@@ -36,7 +37,7 @@ canvas {
 
 #fileInput {
     position: absolute;
-    bottom: 40px;
+    bottom: 30px;
     color: white;
 }
 </style>
@@ -45,8 +46,8 @@ canvas {
 
 <canvas id="canvas"></canvas>
 
-<!-- YOUR Ferrari image file -->
-<img id="album" src="ferrari.png">
+<!-- IMPORTANT: matches your GitHub file exactly -->
+<img id="album" src="ferrari.png.png" alt="Ferrari">
 
 <input type="file" id="fileInput" accept="audio/*">
 
@@ -54,58 +55,75 @@ canvas {
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioContext.createAnalyser();
-analyser.fftSize = 256;
+let audioContext;
+let analyser;
+let dataArray;
+let bufferLength;
+let animationId;
 
-const bufferLength = analyser.frequencyBinCount;
-const dataArray = new Uint8Array(bufferLength);
+document.getElementById("fileInput").addEventListener("change", function() {
 
-const fileInput = document.getElementById("fileInput");
-
-fileInput.addEventListener("change", function() {
     const file = this.files[0];
+    if (!file) return;
+
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
     const audio = new Audio(URL.createObjectURL(file));
     const source = audioContext.createMediaElementSource(audio);
+
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 256;
+
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
 
     source.connect(analyser);
     analyser.connect(audioContext.destination);
 
     audio.play();
+
+    if (animationId) cancelAnimationFrame(animationId);
     animate();
 });
 
 function animate() {
-    requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
 
     analyser.getByteFrequencyData(dataArray);
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = 190;
+    const baseRadius = 180;
 
     for (let i = 0; i < bufferLength; i++) {
+
         const angle = (i / bufferLength) * Math.PI * 2;
-        const barHeight = dataArray[i] * 0.9;
+        const barHeight = dataArray[i] * 0.7;
 
-        const x1 = centerX + Math.cos(angle) * radius;
-        const y1 = centerY + Math.sin(angle) * radius;
+        const x1 = centerX + Math.cos(angle) * baseRadius;
+        const y1 = centerY + Math.sin(angle) * baseRadius;
 
-        const x2 = centerX + Math.cos(angle) * (radius + barHeight);
-        const y2 = centerY + Math.sin(angle) * (radius + barHeight);
-
-        ctx.strokeStyle = "rgba(255,0,0,0.9)";
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = "#ff0000";
-        ctx.lineWidth = 3;
+        const x2 = centerX + Math.cos(angle) * (baseRadius + barHeight);
+        const y2 = centerY + Math.sin(angle) * (baseRadius + barHeight);
 
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
+        ctx.strokeStyle = "#ff0000";
+        ctx.lineWidth = 3;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "#ff0000";
         ctx.stroke();
     }
 }
