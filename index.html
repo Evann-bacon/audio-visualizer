@@ -1,136 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Ferrari Visualizer</title>
+    <title>Ferrari Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(to right, #000000, #1a1a1a);
+            text-align: center;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
 
-<style>
-body {
-    margin: 0;
-    background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
+        h1 {
+            margin-top: 30px;
+            font-size: 40px;
+            letter-spacing: 2px;
+        }
 
-.container {
-    position: relative;
-    width: 600px;
-    height: 600px;
-}
+        .car-container {
+            margin-top: 40px;
+        }
 
-/* Ferrari image */
-.container img {
-    position: absolute;
-    width: 350px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-}
+        img {
+            width: 600px;
+            max-width: 90%;
+            transition: 0.4s ease;
+        }
 
-/* Visualizer canvas */
-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 2;
-}
-</style>
+        .buttons {
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 25px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .red { background: #e10600; color: white; }
+        .yellow { background: #ffd000; color: black; }
+        .black { background: black; color: white; border: 1px solid white; }
+
+        button:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+    <h1>Ferrari Visualizer</h1>
 
-<!-- IMPORTANT: Replace this with your Ferrari image -->
-<img src="ferrari.png" alt="Ferrari">
+    <div class="car-container">
+        <img id="carImage"
+        src="https://upload.wikimedia.org/wikipedia/commons/3/33/Ferrari_488_GTB_Genf_2015.JPG"
+        alt="Ferrari">
+    </div>
 
-<canvas id="canvas"></canvas>
+    <div class="buttons">
+        <button class="red" onclick="changeColor('red')">Red</button>
+        <button class="yellow" onclick="changeColor('yellow')">Yellow</button>
+        <button class="black" onclick="changeColor('black')">Black</button>
+    </div>
 
-</div>
+    <script>
+        function changeColor(color) {
+            const car = document.getElementById("carImage");
 
-<input type="file" id="audioFile" accept="audio/*">
-<button id="replayBtn">Replay</button>
+            if (color === "red") {
+                car.style.filter = "none";
+            }
 
-<script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const audioInput = document.getElementById("audioFile");
-const replayBtn = document.getElementById("replayBtn");
+            if (color === "yellow") {
+                car.style.filter = "hue-rotate(60deg)";
+            }
 
-const size = 600;
-canvas.width = size;
-canvas.height = size;
-
-let audio = new Audio();
-let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let analyser = audioContext.createAnalyser();
-let source;
-let dataArray;
-
-analyser.fftSize = 256;
-const bufferLength = analyser.frequencyBinCount;
-dataArray = new Uint8Array(bufferLength);
-
-audioInput.addEventListener("change", function() {
-    const file = this.files[0];
-    if (!file) return;
-
-    audio.src = URL.createObjectURL(file);
-
-    if (source) source.disconnect();
-
-    source = audioContext.createMediaElementSource(audio);
-    source.connect(analyser);
-    analyser.connect(audioContext.destination);
-
-    audioContext.resume();
-    audio.play();
-
-    animate();
-});
-
-replayBtn.addEventListener("click", function() {
-    audio.currentTime = 0;
-    audio.play();
-});
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    analyser.getByteFrequencyData(dataArray);
-    ctx.clearRect(0, 0, size, size);
-
-    const center = size / 2;
-    const radius = 200;
-
-    for (let i = 0; i < bufferLength; i++) {
-        const value = dataArray[i];
-        const percent = value / 255;
-        const barHeight = 100 * percent;
-
-        const angle = (i / bufferLength) * Math.PI * 2;
-
-        const x1 = center + Math.cos(angle) * radius;
-        const y1 = center + Math.sin(angle) * radius;
-
-        const x2 = center + Math.cos(angle) * (radius + barHeight);
-        const y2 = center + Math.sin(angle) * (radius + barHeight);
-
-        const hue = (i * 6 + Date.now() / 15) % 360;
-
-        ctx.strokeStyle = "hsl(" + hue + ",100%,50%)";
-        ctx.lineWidth = 2;
-
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-    }
-}
-</script>
+            if (color === "black") {
+                car.style.filter = "brightness(0.4)";
+            }
+        }
+    </script>
 
 </body>
 </html>
