@@ -19,13 +19,14 @@ canvas {
 
 #album {
     position: absolute;
-    width: 250px;
-    height: 250px;
+    width: 260px;
+    height: 260px;
     border-radius: 50%;
-    box-shadow: 0 0 40px #ff0000,
-                0 0 80px #ff0000,
-                0 0 120px #ff0000;
-    animation: spin 8s linear infinite;
+    object-fit: cover;
+    box-shadow: 0 0 30px #ff0000,
+                0 0 60px #ff0000,
+                0 0 100px #ff0000;
+    animation: spin 10s linear infinite;
 }
 
 @keyframes spin {
@@ -44,14 +45,15 @@ canvas {
 
 <canvas id="canvas"></canvas>
 
-<img id="album"
-src="https://upload.wikimedia.org/wikipedia/commons/3/33/Ferrari_488_GTB_Genf_2015.JPG">
+<!-- YOUR Ferrari image file -->
+<img id="album" src="ferrari.png">
 
 <input type="file" id="fileInput" accept="audio/*">
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -68,8 +70,10 @@ fileInput.addEventListener("change", function() {
     const file = this.files[0];
     const audio = new Audio(URL.createObjectURL(file));
     const source = audioContext.createMediaElementSource(audio);
+
     source.connect(analyser);
     analyser.connect(audioContext.destination);
+
     audio.play();
     animate();
 });
@@ -78,16 +82,15 @@ function animate() {
     requestAnimationFrame(animate);
 
     analyser.getByteFrequencyData(dataArray);
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = 180;
+    const radius = 190;
 
     for (let i = 0; i < bufferLength; i++) {
         const angle = (i / bufferLength) * Math.PI * 2;
-        const barHeight = dataArray[i] * 0.8;
+        const barHeight = dataArray[i] * 0.9;
 
         const x1 = centerX + Math.cos(angle) * radius;
         const y1 = centerY + Math.sin(angle) * radius;
@@ -95,7 +98,7 @@ function animate() {
         const x2 = centerX + Math.cos(angle) * (radius + barHeight);
         const y2 = centerY + Math.sin(angle) * (radius + barHeight);
 
-        ctx.strokeStyle = "rgba(255,0,0,0.8)";
+        ctx.strokeStyle = "rgba(255,0,0,0.9)";
         ctx.shadowBlur = 20;
         ctx.shadowColor = "#ff0000";
         ctx.lineWidth = 3;
