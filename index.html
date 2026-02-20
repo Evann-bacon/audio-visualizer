@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Visualizer</title>
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at center, #0f0f0f, #000);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+canvas { display: block; }
+input { margin-top: 20px; color: white; }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+<input type="file" id="fileInput" accept="audio/*">
+<audio id="audio"></audio>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const fileInput = document.getElementById("fileInput");
+const audio = document.getElementById("audio");
+
+canvas.width = 500;
+canvas.height = 500;
+
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const analyser = audioContext.createAnalyser();
+analyser.fftSize = 512;
+
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
+
+const source = audioContext.createMediaElementSource(audio);
+source.connect(analyser);
+analyser.connect(audioContext.destination);
+
+fileInput.addEventListener("change", async function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  audio.src = URL.createObjectURL(file);
+
+  if (audioContext.state === "suspended") {
+    await audioContext.resume();
+  }
+
+  audio.play();
+  animate();
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  analyser.getByteFrequencyData(dataArray);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const baseRadius = 120;
+  const bars = 128;
+  const step = Math.floor(dataArray.length / bars);
+
+  for (let i = 0; i < bars; i++) {
+    const value = dataArray[i * step];
+    const percent = value / 255;
+    const barHeight = percent * 100;
+    const angle = (i / bars) * Math.PI * 2;
+
+    const x1 = centerX + Math.cos(angle) * baseRadius;
+    const y1 = centerY + Math.sin(angle) * baseRadius;
+    const x2 = centerX + Math.cos(angle) * (baseRadius + barHeight);
+    const y2 = centerY + Math.sin(angle) * (baseRadius + barHeight);
+
+    const hue = i * 3;
+
+    ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+    ctx.lineWidth = 2;
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = `hsl(${hue}, 100%, 60%)`;
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+}
+</script>
+
+</body>
+</html>
