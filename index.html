@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Ferrari Audio Visualizer</title>
+<title>Ferrari Visualizer</title>
 
 <style>
 body {
@@ -23,11 +23,12 @@ body {
 
 .container img {
     position: absolute;
-    width: 300px;
+    width: 320px;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
     z-index: 2;
+    pointer-events: none;
 }
 
 canvas {
@@ -46,63 +47,73 @@ canvas {
 <body>
 
 <div class="container">
-    <!-- MAKE SURE THIS MATCHES YOUR IMAGE FILE NAME -->
-    <img src="ferrari.png" alt="Ferrari">
+    <!-- More reliable Ferrari image -->
+    <img src="https://images.unsplash.com/photo-1549924231-f129b911e442?q=80&w=1200" alt="Ferrari">
     <canvas id="canvas" width="500" height="500"></canvas>
 </div>
 
 <div class="controls">
     <input type="file" id="audioFile" accept="audio/*">
+    <button id="replayBtn">Replay</button>
 </div>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audioInput = document.getElementById("audioFile");
+const replayBtn = document.getElementById("replayBtn");
 
 let audio = new Audio();
-let audioContext;
-let analyser;
+let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let analyser = audioContext.createAnalyser();
+let source;
 let dataArray;
+
+analyser.fftSize = 256;
+const bufferLength = analyser.frequencyBinCount;
+dataArray = new Uint8Array(bufferLength);
 
 audioInput.addEventListener("change", function() {
     const file = this.files[0];
     if (!file) return;
 
     audio.src = URL.createObjectURL(file);
-    audio.play();
 
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContext.createMediaElementSource(audio);
-    analyser = audioContext.createAnalyser();
+    if (source) {
+        source.disconnect();
+    }
 
+    source = audioContext.createMediaElementSource(audio);
     source.connect(analyser);
     analyser.connect(audioContext.destination);
 
-    analyser.fftSize = 256;
-    const bufferLength = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufferLength);
+    audioContext.resume();
+    audio.play();
 
     animate();
+});
+
+replayBtn.addEventListener("click", function() {
+    audio.currentTime = 0;
+    audio.play();
 });
 
 function animate() {
     requestAnimationFrame(animate);
 
     analyser.getByteFrequencyData(dataArray);
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = 180;
+    const radius = 170;
 
-    for (let i = 0; i < dataArray.length; i++) {
+    for (let i = 0; i < bufferLength; i++) {
         const value = dataArray[i];
         const percent = value / 255;
-        const barHeight = 80 * percent;
+        const barHeight = 90 * percent;
 
-        const angle = (i / dataArray.length) * Math.PI * 2;
+        const angle = (i / bufferLength) * Math.PI * 2;
 
         const x1 = centerX + Math.cos(angle) * radius;
         const y1 = centerY + Math.sin(angle) * radius;
@@ -110,8 +121,8 @@ function animate() {
         const x2 = centerX + Math.cos(angle) * (radius + barHeight);
         const y2 = centerY + Math.sin(angle) * (radius + barHeight);
 
-        // Color changing lines
-        const hue = (i * 4 + Date.now() / 10) % 360;
+        const hue = (i * 5 + Date.now() / 10) % 360;
+
         ctx.strokeStyle = "hsl(" + hue + ", 100%, 50%)";
         ctx.lineWidth = 2;
 
