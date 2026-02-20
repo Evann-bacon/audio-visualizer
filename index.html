@@ -2,95 +2,156 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Visualizer</title>
+<title>Ferrari Audio Visualizer</title>
+
 <style>
 body {
-  margin: 0;
-  background: radial-gradient(circle at center, #0f0f0f, #000);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+    margin: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
-canvas { display: block; }
-input { margin-top: 20px; color: white; }
+
+.visualizer-container {
+    position: relative;
+    width: 500px;
+    height: 500px;
+}
+
+.visualizer-container img {
+    position: absolute;
+    width: 300px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+}
+
+.controls {
+    margin-top: 20px;
+}
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    background: red;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+button:hover {
+    background: darkred;
+}
 </style>
 </head>
+
 <body>
 
-<canvas id="canvas"></canvas>
-<input type="file" id="fileInput" accept="audio/*">
-<audio id="audio"></audio>
+<div class="visualizer-container">
+    <img src="ferrari.png" alt="Ferrari">
+    <canvas id="canvas" width="500" height="500"></canvas>
+</div>
+
+<div class="controls">
+    <input type="file" id="audioFile" accept="audio/*">
+    <button onclick="playAudio()">Play</button>
+    <button onclick="pauseAudio()">Pause</button>
+    <button onclick="replayAudio()">Replay</button>
+</div>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const fileInput = document.getElementById("fileInput");
-const audio = document.getElementById("audio");
+const audioInput = document.getElementById("audioFile");
 
-canvas.width = 500;
-canvas.height = 500;
+let audio = new Audio();
+let audioContext;
+let analyser;
+let dataArray;
+let animationId;
 
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioContext.createAnalyser();
-analyser.fftSize = 512;
+audioInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if (!file) return;
 
-const bufferLength = analyser.frequencyBinCount;
-const dataArray = new Uint8Array(bufferLength);
+    audio.src = URL.createObjectURL(file);
 
-const source = audioContext.createMediaElementSource(audio);
-source.connect(analyser);
-analyser.connect(audioContext.destination);
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaElementSource(audio);
+    analyser = audioContext.createAnalyser();
 
-fileInput.addEventListener("change", async function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
 
-  audio.src = URL.createObjectURL(file);
-
-  if (audioContext.state === "suspended") {
-    await audioContext.resume();
-  }
-
-  audio.play();
-  animate();
+    analyser.fftSize = 256;
+    const bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
 });
 
+function playAudio() {
+    if (!audio.src) return;
+
+    if (audioContext.state === "suspended") {
+        audioContext.resume();
+    }
+
+    audio.play();
+    animate();
+}
+
+function pauseAudio() {
+    audio.pause();
+    cancelAnimationFrame(animationId);
+}
+
+function replayAudio() {
+    audio.currentTime = 0;
+    audio.play();
+    animate();
+}
+
 function animate() {
-  requestAnimationFrame(animate);
-  analyser.getByteFrequencyData(dataArray);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    animationId = requestAnimationFrame(animate);
 
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const baseRadius = 120;
-  const bars = 128;
-  const step = Math.floor(dataArray.length / bars);
+    analyser.getByteFrequencyData(dataArray);
 
-  for (let i = 0; i < bars; i++) {
-    const value = dataArray[i * step];
-    const percent = value / 255;
-    const barHeight = percent * 100;
-    const angle = (i / bars) * Math.PI * 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const x1 = centerX + Math.cos(angle) * baseRadius;
-    const y1 = centerY + Math.sin(angle) * baseRadius;
-    const x2 = centerX + Math.cos(angle) * (baseRadius + barHeight);
-    const y2 = centerY + Math.sin(angle) * (baseRadius + barHeight);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 180;
 
-    const hue = i * 3;
+    for (let i = 0; i < dataArray.length; i++) {
+        const value = dataArray[i];
+        const percent = value / 255;
+        const barHeight = 60 * percent;
 
-    ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
-    ctx.lineWidth = 2;
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = `hsl(${hue}, 100%, 60%)`;
+        const angle = (i / dataArray.length) * Math.PI * 2;
 
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-  }
+        const x1 = centerX + Math.cos(angle) * radius;
+        const y1 = centerY + Math.sin(angle) * radius;
+
+        const x2 = centerX + Math.cos(angle) * (radius + barHeight);
+        const y2 = centerY + Math.sin(angle) * (radius + barHeight);
+
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
 }
 </script>
 
