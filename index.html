@@ -2,44 +2,38 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Wave Visualizer</title>
-
+<title>Wave</title>
 <style>
-body {
-    margin: 0;
-    background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    overflow: hidden;
+body{
+  margin:0;
+  background:black;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
 }
 
-canvas {
-    position: absolute;
+canvas{
+  position:absolute;
 }
 
-#album {
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
-    object-fit: cover;
-    position: absolute;
-    z-index: 2;
-    cursor: pointer;
+#album{
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  object-fit:cover;
+  position:absolute;
+  cursor:pointer;
+  z-index:2;
 }
 </style>
 </head>
-
 <body>
 
 <canvas id="canvas"></canvas>
-
 <img id="album" src="car.png">
-
-<audio id="audio">
-  <source src="music.mp3" type="audio/mpeg">
-</audio>
+<audio id="audio" src="music.mp3"></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -47,12 +41,8 @@ const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
 const album = document.getElementById("album");
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
 const baseRadius = 130;
 const lines = 180;
@@ -60,56 +50,55 @@ const lines = 180;
 let time = 0;
 let animationId = null;
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+  const cx = canvas.width/2;
+  const cy = canvas.height/2;
 
-    for (let i = 0; i < lines; i++) {
-        const angle = (i / lines) * Math.PI * 2;
-        const flow = Math.sin(angle * 6 + time);
+  for(let i=0;i<lines;i++){
+    const angle = (i/lines)*Math.PI*2;
+    const wave = Math.sin(angle*6 + time);
 
-        const innerRadius = baseRadius + flow * 4;
-        const outerRadius = baseRadius + 8 + flow * 6;
+    const inner = baseRadius + wave*4;
+    const outer = baseRadius + 10 + wave*6;
 
-        const x1 = centerX + Math.cos(angle) * innerRadius;
-        const y1 = centerY + Math.sin(angle) * innerRadius;
+    const x1 = cx + Math.cos(angle)*inner;
+    const y1 = cy + Math.sin(angle)*inner;
 
-        const x2 = centerX + Math.cos(angle) * outerRadius;
-        const y2 = centerY + Math.sin(angle) * outerRadius;
+    const x2 = cx + Math.cos(angle)*outer;
+    const y2 = cy + Math.sin(angle)*outer;
 
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-    }
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.strokeStyle="red";
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+  }
 
-    time += 0.035;
-    animationId = requestAnimationFrame(draw);
+  time += 0.04;
+  animationId = requestAnimationFrame(draw);
 }
 
-function stopAnimation() {
-    cancelAnimationFrame(animationId);
-    animationId = null;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function stop(){
+  cancelAnimationFrame(animationId);
+  animationId=null;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-album.addEventListener("click", () => {
-    if (audio.paused) {
-        audio.play().then(() => {
-            if (!animationId) draw();
-        });
-    } else {
-        audio.pause();
-    }
+album.addEventListener("click", ()=>{
+  if(audio.paused){
+    audio.play();
+    if(!animationId) draw();
+  }else{
+    audio.pause();
+  }
 });
 
-audio.addEventListener("pause", stopAnimation);
-audio.addEventListener("ended", stopAnimation);
-</script>
+audio.addEventListener("pause", stop);
+audio.addEventListener("ended", stop);
 
+</script>
 </body>
 </html>
