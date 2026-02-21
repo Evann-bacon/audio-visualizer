@@ -13,10 +13,11 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
-    flex-direction: column;
 }
 
-canvas { position: absolute; }
+canvas {
+    position: absolute;
+}
 
 #album {
     position: absolute;
@@ -26,17 +27,6 @@ canvas { position: absolute; }
     object-fit: cover;
     z-index: 2;
 }
-
-#startBtn {
-    position: absolute;
-    bottom: 40px;
-    padding: 10px 20px;
-    background: red;
-    color: white;
-    border: none;
-    cursor: pointer;
-    z-index: 3;
-}
 </style>
 </head>
 
@@ -44,12 +34,12 @@ canvas { position: absolute; }
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
-<button id="startBtn">Start Visualizer</button>
 <audio id="audio" src="music.mp3"></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -58,8 +48,6 @@ const centerY = canvas.height / 2;
 const baseRadius = 130;
 
 const audio = document.getElementById("audio");
-const startBtn = document.getElementById("startBtn");
-
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const analyser = audioCtx.createAnalyser();
 const source = audioCtx.createMediaElementSource(audio);
@@ -74,35 +62,38 @@ const dataArray = new Uint8Array(bufferLength);
 
 let started = false;
 
-startBtn.addEventListener("click", async () => {
+// Only start when user clicks
+document.body.addEventListener("click", async () => {
     if (!started) {
         await audioCtx.resume();
-        audio.play();
+        await audio.play();
         started = true;
-        startBtn.style.display = "none";
         animate();
     }
 });
 
 function animate() {
+    if (!started) return;   // DO NOT DRAW if not started
+
     requestAnimationFrame(animate);
 
     analyser.getByteFrequencyData(dataArray);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const bars = bufferLength;
+    const bars = bufferLength / 2;
 
     for (let i = 0; i < bars; i++) {
+
         const value = dataArray[i];
         const barHeight = (value / 255) * 80 + 10;
 
-        const angle = (i / bars) * Math.PI * 2;
+        const angle = (i / bars) * Math.PI;
 
-        const x1 = centerX + Math.cos(angle) * baseRadius;
-        const y1 = centerY + Math.sin(angle) * baseRadius;
+        let x1 = centerX + Math.cos(angle) * baseRadius;
+        let y1 = centerY + Math.sin(angle) * baseRadius;
 
-        const x2 = centerX + Math.cos(angle) * (baseRadius + barHeight);
-        const y2 = centerY + Math.sin(angle) * (baseRadius + barHeight);
+        let x2 = centerX + Math.cos(angle) * (baseRadius + barHeight);
+        let y2 = centerY + Math.sin(angle) * (baseRadius + barHeight);
 
         ctx.strokeStyle = "red";
         ctx.lineWidth = 2;
@@ -110,6 +101,12 @@ function animate() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        // Mirror
+        ctx.beginPath();
+        ctx.moveTo(x1, centerY - (y1 - centerY));
+        ctx.lineTo(x2, centerY - (y2 - centerY));
         ctx.stroke();
     }
 }
