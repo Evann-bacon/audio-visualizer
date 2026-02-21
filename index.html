@@ -2,8 +2,6 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Wave Fade Out</title>
-
 <style>
 body {
     margin: 0;
@@ -15,15 +13,21 @@ body {
     overflow: hidden;
 }
 
-canvas { position: absolute; }
+canvas {
+    position: absolute;
+}
 
 #album {
-    position: absolute;
     width: 220px;
     height: 220px;
     border-radius: 50%;
     object-fit: cover;
     z-index: 2;
+    cursor: pointer;
+}
+
+#audio {
+    display: none;
 }
 </style>
 </head>
@@ -32,12 +36,15 @@ canvas { position: absolute; }
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
-<audio id="audio" src="music.mp3" controls></audio>
+<audio id="audio">
+    <source src="music.mp3" type="audio/mpeg">
+</audio>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
+const album = document.getElementById("album");
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -47,23 +54,18 @@ resize();
 window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const lines = 200;
+const lines = 180;
 
 let time = 0;
-let running = false;
-let opacity = 1;
+let animationId = null;
 
 function draw() {
-    if (!running && opacity <= 0) return;
-
-    requestAnimationFrame(draw);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
     for (let i = 0; i < lines; i++) {
-
         const angle = (i / lines) * Math.PI * 2;
         const flow = Math.sin(angle * 6 + time);
 
@@ -79,36 +81,40 @@ function draw() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `rgba(255,0,0,${opacity})`;
+        ctx.strokeStyle = "red";
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 
-    if (running) {
-        time += 0.035;
-        opacity = 1; // fully visible while playing
-    } else {
-        opacity -= 0.02; // fade speed
-        if (opacity < 0) opacity = 0;
-    }
+    time += 0.035;
+    animationId = requestAnimationFrame(draw);
 }
 
-// When audio plays
-audio.addEventListener("play", () => {
-    running = true;
-    opacity = 1;
-    draw();
+function stopAnimation() {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+album.addEventListener("click", function() {
+
+    if (audio.paused) {
+
+        audio.play().then(() => {
+            if (!animationId) draw();
+        }).catch(err => {
+            console.log("Play blocked:", err);
+        });
+
+    } else {
+        audio.pause();
+    }
+
 });
 
-// When audio pauses
-audio.addEventListener("pause", () => {
-    running = false;
-});
+audio.addEventListener("pause", stopAnimation);
+audio.addEventListener("ended", stopAnimation);
 
-// When audio finishes
-audio.addEventListener("ended", () => {
-    running = false;
-});
 </script>
 
 </body>
