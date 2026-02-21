@@ -1,3 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ferrari Wave Visualizer</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+canvas {
+    position: absolute;
+}
+
+#album {
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    object-fit: cover;
+    z-index: 2;
+}
+
+#audio {
+    position: absolute;
+    bottom: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- Your Ferrari image -->
+<img id="album" src="car.png">
+
+<!-- Your music file -->
+<audio id="audio" src="music.mp3" controls></audio>
+
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -18,7 +65,7 @@ let animationId = null;
 
 function draw() {
 
-    // STOP EXACTLY when audio duration is reached
+    // Stop exactly when audio ends
     if (audio.currentTime >= audio.duration) {
         stopAnimation();
         return;
@@ -63,7 +110,7 @@ function stopAnimation() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// Start animation when audio plays
+// Start when audio plays
 audio.addEventListener("play", () => {
     if (!animationId) {
         draw();
@@ -73,6 +120,10 @@ audio.addEventListener("play", () => {
 // Stop when paused
 audio.addEventListener("pause", stopAnimation);
 
-// Extra safety: also stop when ended
+// Stop when ended
 audio.addEventListener("ended", stopAnimation);
+
 </script>
+
+</body>
+</html>
