@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Smooth Wave Ring</title>
+<title>Liquid Wave Ring</title>
 
 <style>
 body {
@@ -15,7 +15,9 @@ body {
     overflow: hidden;
 }
 
-canvas { position: absolute; }
+canvas {
+    position: absolute;
+}
 
 #album {
     position: absolute;
@@ -37,20 +39,25 @@ canvas { position: absolute; }
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-const centerX = canvas.width / 2;
-const centerY = canvas.height / 2;
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const points = 180;
+const points = 240;
 
 let time = 0;
 
 function animate() {
     requestAnimationFrame(animate);
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
     ctx.beginPath();
 
@@ -58,10 +65,12 @@ function animate() {
 
         const angle = (i / points) * Math.PI * 2;
 
-        // smooth floating wave
-        const waveOffset = Math.sin(angle * 4 + time) * 12;
+        // Layered smooth waves
+        const waveA = Math.sin(angle * 2 + time) * 10;
+        const waveB = Math.sin(angle * 5 - time * 1.3) * 6;
+        const waveC = Math.sin(angle * 3 + time * 0.7) * 8;
 
-        const radius = baseRadius + waveOffset;
+        const radius = baseRadius + waveA + waveB + waveC;
 
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
@@ -76,7 +85,7 @@ function animate() {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    time += 0.04;
+    time += 0.03;
 }
 
 animate();
