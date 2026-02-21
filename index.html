@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Wave Control</title>
+<title>Ferrari Wave Visualizer</title>
 
 <style>
 body {
@@ -15,7 +15,9 @@ body {
     overflow: hidden;
 }
 
-canvas { position: absolute; }
+canvas {
+    position: absolute;
+}
 
 #album {
     position: absolute;
@@ -36,7 +38,11 @@ canvas { position: absolute; }
 <body>
 
 <canvas id="canvas"></canvas>
+
+<!-- Your image -->
 <img id="album" src="car.png">
+
+<!-- Your audio -->
 <audio id="audio" src="music.mp3" controls></audio>
 
 <script>
@@ -58,6 +64,7 @@ let time = 0;
 let animationId = null;
 
 function draw() {
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
@@ -97,18 +104,15 @@ function stopAnimation() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-// When audio plays
 audio.addEventListener("play", () => {
     if (!animationId) {
         draw();
     }
 });
 
-// When audio pauses
 audio.addEventListener("pause", stopAnimation);
-
-// When audio ends
 audio.addEventListener("ended", stopAnimation);
+
 </script>
 
 </body>
