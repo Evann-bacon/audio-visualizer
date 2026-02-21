@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Wave Ring</title>
+<title>Smooth Wave Ring</title>
 
 <style>
 body {
@@ -15,9 +15,7 @@ body {
     overflow: hidden;
 }
 
-canvas {
-    position: absolute;
-}
+canvas { position: absolute; }
 
 #album {
     position: absolute;
@@ -34,7 +32,6 @@ canvas {
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
-<audio id="audio" src="music.mp3" autoplay loop></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -47,7 +44,7 @@ const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
 
 const baseRadius = 130;
-const points = 200;
+const points = 180;
 
 let time = 0;
 
@@ -61,27 +58,25 @@ function animate() {
 
         const angle = (i / points) * Math.PI * 2;
 
-        // Smooth animated wave
-        const wave = Math.sin(angle * 6 + time) * 15;
+        // smooth floating wave
+        const waveOffset = Math.sin(angle * 4 + time) * 12;
 
-        const radius = baseRadius + wave;
+        const radius = baseRadius + waveOffset;
 
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
 
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
     }
 
     ctx.closePath();
+
     ctx.strokeStyle = "red";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
 
-    time += 0.05;
+    time += 0.04;
 }
 
 animate();
