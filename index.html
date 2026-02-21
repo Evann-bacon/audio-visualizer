@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Refined Wave Ring</title>
+<title>Line Wave Ring</title>
 
 <style>
 body {
@@ -32,10 +32,12 @@ canvas { position: absolute; }
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
+<audio id="audio" src="music.mp3"></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const audio = document.getElementById("audio");
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -45,11 +47,14 @@ resize();
 window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const lines = 220; // more lines = smoother
+const lines = 200;
 
 let time = 0;
+let started = false;
 
 function animate() {
+    if (!started) return;
+
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -59,11 +64,8 @@ function animate() {
     for (let i = 0; i < lines; i++) {
 
         const angle = (i / lines) * Math.PI * 2;
-
-        // MORE waves around circle (higher frequency)
         const flow = Math.sin(angle * 6 + time);
 
-        // Smaller detach distance
         const innerRadius = baseRadius + flow * 4;
         const outerRadius = baseRadius + 8 + flow * 6;
 
@@ -77,14 +79,21 @@ function animate() {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.strokeStyle = "red";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 
-    time += 0.035; // smooth speed
+    time += 0.035;
 }
 
-animate();
+// Start ONLY when user clicks
+document.body.addEventListener("click", () => {
+    if (!started) {
+        audio.play();
+        started = true;
+        animate();
+    }
+});
 </script>
 
 </body>
