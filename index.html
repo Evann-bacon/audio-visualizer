@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Full Circle Audio Visualizer</title>
+<title>Ferrari Audio Visualizer</title>
 
 <style>
 body {
@@ -61,7 +61,7 @@ analyser.fftSize = 512;
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 
-// Start audio on click
+// Click anywhere to start
 document.body.addEventListener("click", () => {
     audioCtx.resume();
     audio.play();
@@ -71,17 +71,21 @@ function animate() {
     requestAnimationFrame(animate);
 
     analyser.getByteFrequencyData(dataArray);
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const totalBars = 180; // More bars = full circle coverage
+    const totalBars = 200;
 
     for (let i = 0; i < totalBars; i++) {
 
         const index = Math.floor(i * bufferLength / totalBars);
-        const value = dataArray[index];
+        let value = dataArray[index];
 
-        const barHeight = value * 0.25; // short bars
+        // Boost weaker frequencies
+        value *= 1.5;
+
+        // Ensure minimum bar height
+        const minHeight = 8;
+        const barHeight = Math.max(value * 0.25, minHeight);
 
         const angle = (i / totalBars) * Math.PI * 2;
 
