@@ -50,10 +50,10 @@ const baseRadius = 130;
 const lines = 200;
 
 let time = 0;
-let started = false;
+let animationRunning = false;
 
 function animate() {
-    if (!started) return;
+    if (!animationRunning) return;
 
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -86,13 +86,17 @@ function animate() {
     time += 0.035;
 }
 
-// Start ONLY when user clicks
-document.body.addEventListener("click", () => {
-    if (!started) {
-        audio.play();
-        started = true;
+// START ONLY when audio ACTUALLY plays
+audio.addEventListener("play", () => {
+    if (!animationRunning) {
+        animationRunning = true;
         animate();
     }
+});
+
+// user interaction to start audio
+document.body.addEventListener("click", () => {
+    audio.play();
 });
 </script>
 
