@@ -61,7 +61,6 @@ analyser.fftSize = 512;
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 
-// Click anywhere to start
 document.body.addEventListener("click", () => {
     audioCtx.resume();
     audio.play();
@@ -74,16 +73,24 @@ function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const totalBars = 200;
+    const halfBars = totalBars / 2;
 
     for (let i = 0; i < totalBars; i++) {
 
-        const index = Math.floor(i * bufferLength / totalBars);
-        let value = dataArray[index];
+        // Mirror frequencies
+        let mirroredIndex;
 
-        // Boost weaker frequencies
-        value *= 1.5;
+        if (i < halfBars) {
+            mirroredIndex = Math.floor(i * bufferLength / halfBars);
+        } else {
+            mirroredIndex = Math.floor((totalBars - i) * bufferLength / halfBars);
+        }
 
-        // Ensure minimum bar height
+        let value = dataArray[mirroredIndex];
+
+        // Make it stronger + balanced
+        value *= 1.4;
+
         const minHeight = 8;
         const barHeight = Math.max(value * 0.25, minHeight);
 
