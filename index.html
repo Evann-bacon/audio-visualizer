@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Line Wave Ring</title>
+<title>Wave Control</title>
 
 <style>
 body {
@@ -25,6 +25,11 @@ canvas { position: absolute; }
     object-fit: cover;
     z-index: 2;
 }
+
+#audio {
+    position: absolute;
+    bottom: 20px;
+}
 </style>
 </head>
 
@@ -32,7 +37,7 @@ canvas { position: absolute; }
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
-<audio id="audio" src="music.mp3"></audio>
+<audio id="audio" src="music.mp3" controls></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -47,15 +52,12 @@ resize();
 window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const lines = 200;
+const lines = 180;
 
 let time = 0;
-let animationRunning = false;
+let animationId = null;
 
-function animate() {
-    if (!animationRunning) return;
-
-    requestAnimationFrame(animate);
+function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
@@ -84,20 +86,29 @@ function animate() {
     }
 
     time += 0.035;
+    animationId = requestAnimationFrame(draw);
 }
 
-// START ONLY when audio ACTUALLY plays
+function stopAnimation() {
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// When audio plays
 audio.addEventListener("play", () => {
-    if (!animationRunning) {
-        animationRunning = true;
-        animate();
+    if (!animationId) {
+        draw();
     }
 });
 
-// user interaction to start audio
-document.body.addEventListener("click", () => {
-    audio.play();
-});
+// When audio pauses
+audio.addEventListener("pause", stopAnimation);
+
+// When audio ends
+audio.addEventListener("ended", stopAnimation);
 </script>
 
 </body>
