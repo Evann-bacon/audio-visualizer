@@ -13,6 +13,7 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
+    cursor: pointer;
 }
 
 canvas {
@@ -29,8 +30,7 @@ canvas {
 }
 
 #audio {
-    position: absolute;
-    bottom: 20px;
+    display: none; /* hides the controls */
 }
 </style>
 </head>
@@ -39,16 +39,16 @@ canvas {
 
 <canvas id="canvas"></canvas>
 
-<!-- Your image -->
+<!-- Click this image to play -->
 <img id="album" src="car.png">
 
-<!-- Your audio -->
-<audio id="audio" src="music.mp3" controls></audio>
+<audio id="audio" src="music.mp3"></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
+const album = document.getElementById("album");
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -104,12 +104,17 @@ function stopAnimation() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-audio.addEventListener("play", () => {
-    if (!animationId) {
-        draw();
+// CLICK IMAGE TO PLAY / PAUSE
+album.addEventListener("click", () => {
+    if (audio.paused) {
+        audio.play();
+        if (!animationId) draw();
+    } else {
+        audio.pause();
     }
 });
 
+// Stop waves when audio stops
 audio.addEventListener("pause", stopAnimation);
 audio.addEventListener("ended", stopAnimation);
 
