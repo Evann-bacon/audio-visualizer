@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Detach Line Wave</title>
+<title>Refined Wave Ring</title>
 
 <style>
 body {
@@ -45,7 +45,7 @@ resize();
 window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const lines = 180;
+const lines = 220; // more lines = smoother
 
 let time = 0;
 
@@ -60,14 +60,12 @@ function animate() {
 
         const angle = (i / lines) * Math.PI * 2;
 
-        // flowing wave offset
-        const flow = Math.sin(angle * 3 + time);
+        // MORE waves around circle (higher frequency)
+        const flow = Math.sin(angle * 6 + time);
 
-        // inner radius sometimes moves inward (detaches)
-        const innerRadius = baseRadius + flow * 6;
-
-        // outer radius always slightly further
-        const outerRadius = baseRadius + 12 + flow * 8;
+        // Smaller detach distance
+        const innerRadius = baseRadius + flow * 4;
+        const outerRadius = baseRadius + 8 + flow * 6;
 
         const x1 = centerX + Math.cos(angle) * innerRadius;
         const y1 = centerY + Math.sin(angle) * innerRadius;
@@ -83,7 +81,7 @@ function animate() {
         ctx.stroke();
     }
 
-    time += 0.04;
+    time += 0.035; // smooth speed
 }
 
 animate();
