@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Ferrari Wave Visualizer</title>
+<title>Wave Fade Out</title>
 
 <style>
 body {
@@ -13,12 +13,9 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
-    cursor: pointer;
 }
 
-canvas {
-    position: absolute;
-}
+canvas { position: absolute; }
 
 #album {
     position: absolute;
@@ -28,27 +25,19 @@ canvas {
     object-fit: cover;
     z-index: 2;
 }
-
-#audio {
-    display: none; /* hides the controls */
-}
 </style>
 </head>
 
 <body>
 
 <canvas id="canvas"></canvas>
-
-<!-- Click this image to play -->
 <img id="album" src="car.png">
-
-<audio id="audio" src="music.mp3"></audio>
+<audio id="audio" src="music.mp3" controls></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
-const album = document.getElementById("album");
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -58,13 +47,16 @@ resize();
 window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const lines = 180;
+const lines = 200;
 
 let time = 0;
-let animationId = null;
+let running = false;
+let opacity = 1;
 
 function draw() {
+    if (!running && opacity <= 0) return;
 
+    requestAnimationFrame(draw);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const centerX = canvas.width / 2;
@@ -87,37 +79,36 @@ function draw() {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.strokeStyle = "red";
+        ctx.strokeStyle = `rgba(255,0,0,${opacity})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
     }
 
-    time += 0.035;
-    animationId = requestAnimationFrame(draw);
-}
-
-function stopAnimation() {
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-    }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-// CLICK IMAGE TO PLAY / PAUSE
-album.addEventListener("click", () => {
-    if (audio.paused) {
-        audio.play();
-        if (!animationId) draw();
+    if (running) {
+        time += 0.035;
+        opacity = 1; // fully visible while playing
     } else {
-        audio.pause();
+        opacity -= 0.02; // fade speed
+        if (opacity < 0) opacity = 0;
     }
+}
+
+// When audio plays
+audio.addEventListener("play", () => {
+    running = true;
+    opacity = 1;
+    draw();
 });
 
-// Stop waves when audio stops
-audio.addEventListener("pause", stopAnimation);
-audio.addEventListener("ended", stopAnimation);
+// When audio pauses
+audio.addEventListener("pause", () => {
+    running = false;
+});
 
+// When audio finishes
+audio.addEventListener("ended", () => {
+    running = false;
+});
 </script>
 
 </body>
