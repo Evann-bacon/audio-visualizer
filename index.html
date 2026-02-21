@@ -13,11 +13,10 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
+    flex-direction: column;
 }
 
-canvas {
-    position: absolute;
-}
+canvas { position: absolute; }
 
 #album {
     position: absolute;
@@ -27,6 +26,17 @@ canvas {
     object-fit: cover;
     z-index: 2;
 }
+
+#startBtn {
+    position: absolute;
+    bottom: 40px;
+    padding: 10px 20px;
+    background: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+    z-index: 3;
+}
 </style>
 </head>
 
@@ -34,12 +44,12 @@ canvas {
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
+<button id="startBtn">Start Visualizer</button>
 <audio id="audio" src="music.mp3"></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -48,6 +58,8 @@ const centerY = canvas.height / 2;
 const baseRadius = 130;
 
 const audio = document.getElementById("audio");
+const startBtn = document.getElementById("startBtn");
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const analyser = audioCtx.createAnalyser();
 const source = audioCtx.createMediaElementSource(audio);
@@ -60,9 +72,16 @@ analyser.fftSize = 256;
 const bufferLength = analyser.frequencyBinCount;
 const dataArray = new Uint8Array(bufferLength);
 
-document.body.addEventListener("click", () => {
-    audioCtx.resume();
-    audio.play();
+let started = false;
+
+startBtn.addEventListener("click", async () => {
+    if (!started) {
+        await audioCtx.resume();
+        audio.play();
+        started = true;
+        startBtn.style.display = "none";
+        animate();
+    }
 });
 
 function animate() {
@@ -74,10 +93,7 @@ function animate() {
     const bars = bufferLength;
 
     for (let i = 0; i < bars; i++) {
-
         const value = dataArray[i];
-
-        // Strong visible scaling
         const barHeight = (value / 255) * 80 + 10;
 
         const angle = (i / bars) * Math.PI * 2;
@@ -97,8 +113,6 @@ function animate() {
         ctx.stroke();
     }
 }
-
-animate();
 </script>
 
 </body>
