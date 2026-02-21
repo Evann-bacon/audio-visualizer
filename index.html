@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Ferrari Visualizer</title>
+<title>Wave Ring</title>
 
 <style>
 body {
@@ -34,7 +34,7 @@ canvas {
 
 <canvas id="canvas"></canvas>
 <img id="album" src="car.png">
-<audio id="audio" src="music.mp3"></audio>
+<audio id="audio" src="music.mp3" autoplay loop></audio>
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -45,71 +45,46 @@ canvas.height = window.innerHeight;
 
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
+
 const baseRadius = 130;
+const points = 200;
 
-const audio = document.getElementById("audio");
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const analyser = audioCtx.createAnalyser();
-const source = audioCtx.createMediaElementSource(audio);
-
-source.connect(analyser);
-analyser.connect(audioCtx.destination);
-
-analyser.fftSize = 256;
-
-const bufferLength = analyser.frequencyBinCount;
-const dataArray = new Uint8Array(bufferLength);
-
-let started = false;
-
-// Only start when user clicks
-document.body.addEventListener("click", async () => {
-    if (!started) {
-        await audioCtx.resume();
-        await audio.play();
-        started = true;
-        animate();
-    }
-});
+let time = 0;
 
 function animate() {
-    if (!started) return;   // DO NOT DRAW if not started
-
     requestAnimationFrame(animate);
-
-    analyser.getByteFrequencyData(dataArray);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const bars = bufferLength / 2;
+    ctx.beginPath();
 
-    for (let i = 0; i < bars; i++) {
+    for (let i = 0; i <= points; i++) {
 
-        const value = dataArray[i];
-        const barHeight = (value / 255) * 80 + 10;
+        const angle = (i / points) * Math.PI * 2;
 
-        const angle = (i / bars) * Math.PI;
+        // Smooth animated wave
+        const wave = Math.sin(angle * 6 + time) * 15;
 
-        let x1 = centerX + Math.cos(angle) * baseRadius;
-        let y1 = centerY + Math.sin(angle) * baseRadius;
+        const radius = baseRadius + wave;
 
-        let x2 = centerX + Math.cos(angle) * (baseRadius + barHeight);
-        let y2 = centerY + Math.sin(angle) * (baseRadius + barHeight);
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
 
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 2;
-
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-
-        // Mirror
-        ctx.beginPath();
-        ctx.moveTo(x1, centerY - (y1 - centerY));
-        ctx.lineTo(x2, centerY - (y2 - centerY));
-        ctx.stroke();
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
     }
+
+    ctx.closePath();
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    time += 0.05;
 }
+
+animate();
 </script>
 
 </body>
