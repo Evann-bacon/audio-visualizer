@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Audio Visualizer</title>
+<title>Ferrari Visualizer</title>
 
 <style>
 body{
@@ -27,6 +27,7 @@ canvas{
   position:absolute;
   z-index:2;
   cursor:pointer;
+  transition: box-shadow 0.3s ease;
 }
 </style>
 </head>
@@ -51,11 +52,13 @@ resize();
 window.addEventListener("resize", resize);
 
 const baseRadius = 130;
-const lines = 180;
+const lines = 200;
 
 let time = 0;
 let animationId = null;
 let isAnimating = false;
+let opacity = 1;
+let fadingOut = false;
 
 function draw(){
   if(!isAnimating) return;
@@ -64,6 +67,9 @@ function draw(){
 
   const cx = canvas.width/2;
   const cy = canvas.height/2;
+
+  ctx.save();
+  ctx.globalAlpha = opacity;
 
   for(let i=0;i<lines;i++){
     const angle = (i/lines)*Math.PI*2;
@@ -81,23 +87,51 @@ function draw(){
     ctx.beginPath();
     ctx.moveTo(x1,y1);
     ctx.lineTo(x2,y2);
-    ctx.strokeStyle="red";
-    ctx.lineWidth=1.5;
+
+    ctx.strokeStyle = "#ff1a1a";
+    ctx.lineWidth = 1.5;
+
+    // 🔥 Ferrari glow
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#ff0000";
+
     ctx.stroke();
   }
 
+  ctx.restore();
+
   time += 0.04;
+
+  // 🌫 Smooth fade out
+  if(fadingOut){
+    opacity -= 0.03;
+    if(opacity <= 0){
+      opacity = 0;
+      stopFully();
+      return;
+    }
+  }
+
   animationId = requestAnimationFrame(draw);
 }
 
 function startWaves(){
   if(isAnimating) return;
   isAnimating = true;
+  fadingOut = false;
+  opacity = 1;
+  album.style.boxShadow = "0 0 25px #ff0000";
   draw();
 }
 
 function stopWaves(){
+  fadingOut = true;
+  album.style.boxShadow = "0 0 0px #ff0000";
+}
+
+function stopFully(){
   isAnimating = false;
+  fadingOut = false;
 
   if(animationId){
     cancelAnimationFrame(animationId);
@@ -118,6 +152,7 @@ album.addEventListener("click", ()=>{
 audio.addEventListener("play", startWaves);
 audio.addEventListener("pause", stopWaves);
 audio.addEventListener("ended", stopWaves);
+
 </script>
 
 </body>
