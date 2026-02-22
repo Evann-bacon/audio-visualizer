@@ -43,7 +43,6 @@ const ctx = canvas.getContext("2d");
 const audio = document.getElementById("audio");
 const album = document.getElementById("album");
 
-// Resize canvas
 function resize(){
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -56,9 +55,11 @@ const lines = 180;
 
 let time = 0;
 let animationId = null;
+let isAnimating = false;
 
-// DRAW WAVES
 function draw(){
+  if(!isAnimating) return;
+
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   const cx = canvas.width/2;
@@ -89,37 +90,34 @@ function draw(){
   animationId = requestAnimationFrame(draw);
 }
 
-// STOP WAVES
+function startWaves(){
+  if(isAnimating) return;
+  isAnimating = true;
+  draw();
+}
+
 function stopWaves(){
+  isAnimating = false;
+
   if(animationId){
     cancelAnimationFrame(animationId);
     animationId = null;
   }
+
   ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-// CLICK IMAGE TO PLAY / PAUSE
 album.addEventListener("click", ()=>{
   if(audio.paused){
     audio.play();
-  }else{
+  } else {
     audio.pause();
   }
 });
 
-// START WAVES WHEN AUDIO PLAYS
-audio.addEventListener("play", ()=>{
-  if(!animationId){
-    draw();
-  }
-});
-
-// STOP WAVES WHEN PAUSED
+audio.addEventListener("play", startWaves);
 audio.addEventListener("pause", stopWaves);
-
-// STOP WAVES WHEN AUDIO ENDS
 audio.addEventListener("ended", stopWaves);
-
 </script>
 
 </body>
